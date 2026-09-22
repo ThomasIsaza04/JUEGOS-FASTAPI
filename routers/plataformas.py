@@ -8,7 +8,7 @@ router = APIRouter(prefix="/plataformas", tags=["Plataformas"])
 
 
 @router.post("/", response_model=schemas.PlataformaResponse, status_code=status.HTTP_201_CREATED)
-def crear_plataforma(plataforma: schemas.PlataformaBase, usuario=Depends(seguridad.obtener_usuario_actual)):
+def crear_plataforma(plataforma: schemas.PlataformaCreate, usuario_admin=Depends(seguridad.requerir_admin)):
     conn = obtener_conexion()
     cursor = conn.cursor()
     cursor.execute(
@@ -19,7 +19,7 @@ def crear_plataforma(plataforma: schemas.PlataformaBase, usuario=Depends(segurid
     nuevo_id = cursor.lastrowid
     conn.close()
 
-    return {**plataforma.dict(), "id": nuevo_id}
+    return {**plataforma.model_dump(), "id": nuevo_id}
 
 
 @router.get("/", response_model=List[schemas.PlataformaResponse])
@@ -53,7 +53,7 @@ def obtener_plataforma(plataforma_id: int):
 def actualizar_plataforma(
     plataforma_id: int,
     datos: schemas.PlataformaUpdate,
-    usuario=Depends(seguridad.obtener_usuario_actual)
+    usuario_admin=Depends(seguridad.requerir_admin)
 ):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -98,8 +98,7 @@ def eliminar_plataforma(plataforma_id: int, usuario_admin=Depends(seguridad.requ
     conn.commit()
     conn.close()
 
-    return {"mensaje": f"Plataforma {plataforma_id} y sus juegos asociados eliminados."}
-
+    return {"detail": f"Plataforma {plataforma_id} y sus juegos asociados eliminados exitosamente."}
 
 # Consulta Combinada con JOIN 
 @router.get("/{plataforma_id}/juegos")

@@ -8,7 +8,7 @@ router = APIRouter(prefix="/juegos", tags=["Juegos"])
 
 
 @router.post("/", response_model=schemas.JuegoResponse, status_code=status.HTTP_201_CREATED)
-def crear_juego(juego: schemas.JuegoBase, usuario=Depends(seguridad.obtener_usuario_actual)):
+def crear_juego(juego: schemas.JuegoCreate, usuario_admin=Depends(seguridad.requerir_admin)):
     conn = obtener_conexion()
     cursor = conn.cursor()
 
@@ -29,7 +29,7 @@ def crear_juego(juego: schemas.JuegoBase, usuario=Depends(seguridad.obtener_usua
     nuevo_id = cursor.lastrowid
     conn.close()
 
-    return {**juego.dict(), "id": nuevo_id}
+    return {**juego.model_dump(), "id": nuevo_id}
 
 
 @router.get("/", response_model=List[schemas.JuegoResponse])
@@ -63,7 +63,7 @@ def obtener_juego(juego_id: int):
 def actualizar_juego(
     juego_id: int,
     datos: schemas.JuegoUpdate,
-    usuario=Depends(seguridad.obtener_usuario_actual)
+    usuario_admin=Depends(seguridad.requerir_admin)
 ):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -126,4 +126,4 @@ def eliminar_juego(juego_id: int, usuario_admin=Depends(seguridad.requerir_admin
     conn.commit()
     conn.close()
 
-    return {"mensaje": f"Juego con ID {juego_id} eliminado exitosamente."}
+    return {"detail": f"Juego con ID {juego_id} eliminado exitosamente."}
